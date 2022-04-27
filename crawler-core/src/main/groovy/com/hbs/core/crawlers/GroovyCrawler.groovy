@@ -45,6 +45,69 @@ class GroovyCrawler {
         newCrawler(new CrawlerParameters())
     }
 
+    GroovyCrawler doGet(String url) {
+        doGet(url, [:])
+    }
+
+    GroovyCrawler doGet(String url, Map<String, Object> params) {
+        doGet(url, params, [:])
+    }
+
+    GroovyCrawler doGet(String url, Map<String, Object> params, Map<String, String> headers) {
+        doGet(url, params, headers, crawlerConf.tryTimes)
+    }
+
+    GroovyCrawler doGet(String url, Map<String, Object> params, Map<String, String> headers, Integer tryTimes) {
+        execute([url           : url,
+                 requestType   : HttpRequestType.GET,
+                 requestParams : params,
+                 requestHeaders: headers,
+                 tryTimes      : tryTimes
+        ])
+    }
+
+    GroovyCrawler doPostForm(String url) {
+        doPostForm(url, [:])
+    }
+
+    GroovyCrawler doPostForm(String url, Map<String, Object> params) {
+        doPostForm(url, params, [:])
+    }
+
+    GroovyCrawler doPostForm(String url, Map<String, Object> params, Map<String, String> headers) {
+        doPostForm(url, params, headers, crawlerConf.tryTimes)
+    }
+
+    GroovyCrawler doPostForm(String url, Map<String, Object> params, Map<String, String> headers, Integer tryTimes) {
+        execute([url           : url,
+                 requestType   : HttpRequestType.POST_FORM,
+                 requestParams : params,
+                 requestHeaders: headers,
+                 tryTimes      : tryTimes
+        ])
+    }
+
+    GroovyCrawler doPostJson(String url) {
+        doPostJson(url, [:])
+    }
+
+    GroovyCrawler doPostJson(String url, def params) {
+        doPostJson(url, params, [:])
+    }
+
+    GroovyCrawler doPostJson(String url, def params, Map<String, String> headers) {
+        doPostJson(url, params, headers, crawlerConf.tryTimes)
+    }
+
+    GroovyCrawler doPostJson(String url, def params, Map<String, String> headers, Integer tryTimes) {
+        execute([url           : url,
+                 requestType   : HttpRequestType.POST_JSON,
+                 requestParams : params,
+                 requestHeaders: headers,
+                 tryTimes      : tryTimes
+        ])
+    }
+
 
     GroovyCrawler execute(def params) {
         // 请求类型
@@ -169,6 +232,10 @@ class GroovyCrawler {
                 builder.header(entry.key, entry.value)
             }
         }
+    }
+
+    GroovyCrawler parseWebDocument() {
+
     }
 
 }
