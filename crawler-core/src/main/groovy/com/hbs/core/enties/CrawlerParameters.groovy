@@ -23,4 +23,9 @@ class CrawlerParameters {
      */
     long reTryInterval = 1000;
 
+    /**
+     * 下一页地址，或者起始爬取地址
+     */
+    String nextPageUrl
+
 }
