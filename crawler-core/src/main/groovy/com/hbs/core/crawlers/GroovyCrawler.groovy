@@ -6,6 +6,7 @@ import com.hbs.core.constants.HttpRequestType
 import com.hbs.core.enties.CrawlerParameters
 import com.hbs.core.enties.RespBody
 import okhttp3.*
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.Jsoup
@@ -721,7 +722,16 @@ class GroovyCrawler {
     }
 
     /**
-     * 根据下一页地址循环爬取 (单线程)
+     * 将字节数据写入文件中
+     * @param fileName 文件全限定名
+     * @param bytes 写入文件的数据
+     */
+    void saveFile(String fileName, byte[] bytes) {
+        FileUtils.writeByteArrayToFile(new File(fileName), bytes)
+    }
+
+    /**
+     * 根据下一页地址循环爬取 (单爬虫复用)
      * @param crawler 爬虫
      * @param crawlLogic 爬虫逻辑
      */
@@ -735,7 +745,7 @@ class GroovyCrawler {
     }
 
     /**
-     * 根据下一页地址循环爬取 （多线程）
+     * 根据下一页地址循环爬取 （多爬虫）
      * @param crawler 爬虫初始爬虫
      * @param crawlLogic 爬虫逻辑，返回值为新爬虫
      */
