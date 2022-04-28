@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 
 import java.nio.charset.Charset
 import java.util.function.BiConsumer
+import java.util.function.BiFunction
 import java.util.function.Consumer
 
 /**
@@ -720,7 +721,7 @@ class GroovyCrawler {
     }
 
     /**
-     * 根据下一页地址循环爬取
+     * 根据下一页地址循环爬取 (单线程)
      * @param crawler 爬虫
      * @param crawlLogic 爬虫逻辑
      */
@@ -731,6 +732,20 @@ class GroovyCrawler {
                 crawlLogic.accept(crawler, nextPage)
             }
         } while (crawler.hasNextPage())
+    }
+
+    /**
+     * 根据下一页地址循环爬取 （多线程）
+     * @param crawler 爬虫初始爬虫
+     * @param crawlLogic 爬虫逻辑，返回值为新爬虫
+     */
+    static void loopCrawl(GroovyCrawler crawler, BiFunction<GroovyCrawler, String, GroovyCrawler> crawlLogic) {
+        do {
+            String nextPage = crawler.getNextPage();
+            if (StringUtils.isNotBlank(nextPage)) {
+                crawler = crawlLogic.apply(crawler, nextPage)
+            }
+        } while (Objects.nonNull(crawler) && crawler.hasNextPage())
     }
 
 }

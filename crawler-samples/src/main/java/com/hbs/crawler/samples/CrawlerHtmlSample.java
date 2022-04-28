@@ -1,9 +1,15 @@
-# hbs-crawler
-Crawler tools based on Groovy and Java
+package com.hbs.crawler.samples;
 
-## Html Sample 
-> com.hbs.crawler.samples.CrawlerHtmlSample
-```html
+import com.hbs.core.crawlers.GroovyCrawler;
+import org.jsoup.nodes.Element;
+
+import java.util.function.BiConsumer;
+
+/**
+ * Created by zun.wei on 2022/4/28.
+ */
+public class CrawlerHtmlSample {
+
     public static void main(String[] args) {
         GroovyCrawler newCrawler = GroovyCrawler.newCrawler("https://xxx.ddd.com/sample");
         GroovyCrawler.loopCrawl(newCrawler, crawlLogic());
@@ -54,35 +60,4 @@ Crawler tools based on Groovy and Java
         };
     }
 
-```
-## Image Sample
-> com.hbs.crawler.samples.CrawlerImagesSample
-```html
-    public static void main(String[] args) {
-        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/995820/pexels-photo-995820.jpeg?fm=jpg");
-        GroovyCrawler.loopCrawl(crawler, crawlLogic());
-    }
-
-    static BiConsumer<GroovyCrawler, String> crawlLogic() {
-        return (crawler, nextPageUrl) -> {
-
-            String[] ss = nextPageUrl.split("/");
-            String idStr = ss[4];
-            long id = Long.parseLong(idStr) + 1;
-            String nextPageUrl2 = StringUtils.replace(nextPageUrl, idStr, Long.toString(id));
-
-            byte[] respBody = crawler.doGet(nextPageUrl, new HashMap<>()).getBytesResultAndReleaseRespBody();
-            if (respBody.length > 500) {
-                try {
-                    FileUtils.writeByteArrayToFile(new File("imgs/" + idStr +".jpeg"), respBody);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (id > 1995825) {
-                return;
-            }
-            crawler.setNextPageUrl(nextPageUrl2);
-        };
-    }
-```
+}
