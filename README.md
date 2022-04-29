@@ -1,5 +1,21 @@
 # hbs-crawler
-Crawler tools based on Groovy and Java
+A library that makes it easier for Java developers to use web crawlers
+
+## How to Use
+> Download the code to your machine
+
+> Enter the project directory to execute command `mvn clean install`
+
+> Add the dependency library to your project
+
+```html
+<dependency>
+    <groupId>com.hbs</groupId>
+    <artifactId>crawler-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+> Now you can use it 
 
 ## Html Sample 
 > com.hbs.crawler.samples.CrawlerHtmlSample
