@@ -18,7 +18,7 @@ public class CrawlerImagesSample2 {
 
 
     public static void main(String[] args) {
-        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/995820/pexels-photo-995820.jpeg?fm=jpg");
+        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/995820/pexels-photo-996125.jpeg?fm=jpg");
         GroovyCrawler.loopCrawl(crawler, crawlLogic());
     }
 
@@ -40,7 +40,7 @@ public class CrawlerImagesSample2 {
                 }
             });
 
-            if (id > 1995825) {
+            if (id > 199582500) {
                 return null;
             }
             return GroovyCrawler.newCrawler(nextPageUrl2);
