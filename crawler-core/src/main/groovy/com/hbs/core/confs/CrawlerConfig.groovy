@@ -4,6 +4,7 @@ import com.hbs.core.enties.RespBody
 import okhttp3.OkHttpClient
 import org.jsoup.nodes.Document
 
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -37,9 +38,10 @@ class CrawlerConfig {
     OkHttpClient okHttpClient;
 
     /**
-     * 响应体
+     * 响应体,key url;
      */
-    List<RespBody> respBodys = new ArrayList<>();
+    Map<String, RespBody> respBodys = new ConcurrentHashMap<>()
+    //List<RespBody> respBodys = new ArrayList<>();
 
     /**
      * 重试次数
@@ -52,9 +54,11 @@ class CrawlerConfig {
     long reTryInterval = 1000;
 
     /**
-     * html dom 文本列表
+     * html dom 文本列表; key url
      */
-    List<Document> documents = new ArrayList<>();
+    //List<Document> documents = new ArrayList<>();
+    Map<String, Document> documents = new ConcurrentHashMap<>()
+
 
     /**
      * 下一页url链接

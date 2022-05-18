@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -18,22 +19,22 @@ public class CrawlerImagesSample2 {
 
 
     public static void main(String[] args) {
-        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/995820/pexels-photo-996125.jpeg?fm=jpg");
+        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/998638/pexels-photo-998638.jpeg?fm=jpg");
         GroovyCrawler.loopCrawl(crawler, crawlLogic());
     }
 
-    static BiFunction<GroovyCrawler, String, GroovyCrawler> crawlLogic() {
+    static BiConsumer<GroovyCrawler, String> crawlLogic() {
         return (crawler, nextPageUrl) -> {
             String[] ss = nextPageUrl.split("/");
             String idStr = ss[4];
             long id = Long.parseLong(idStr) + 1;
             String nextPageUrl2 = StringUtils.replace(nextPageUrl, idStr, Long.toString(id));
 
-            ThreadPool.THREAD_POOL_EXECUTOR.execute(() -> {
-                byte[] respBody = crawler.doGet(nextPageUrl).getBytesResultAndReleaseRespBody();
+            ThreadPool.execute(() -> {
+                byte[] respBody = crawler.doGet(nextPageUrl).getBytesResultAndReleaseRespBody(nextPageUrl);
                 if (respBody.length > 500) {
                     try {
-                        FileUtils.writeByteArrayToFile(new File("imgs/" + idStr + ".jpeg"), respBody);
+                        FileUtils.writeByteArrayToFile(new File("H:\\disk\\网络图片\\" + idStr + ".jpeg"), respBody);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -41,9 +42,9 @@ public class CrawlerImagesSample2 {
             });
 
             if (id > 199582500) {
-                return null;
+                return;
             }
-            return GroovyCrawler.newCrawler(nextPageUrl2);
+            crawler.setNextPageUrl(nextPageUrl2);
         };
     }
 

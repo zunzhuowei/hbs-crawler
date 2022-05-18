@@ -34,7 +34,7 @@ public class ThreadPool {
     private static final RejectedExecutionHandler rejectHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     //线程池对象，创建线程
-    public static final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(
+    private static final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(
             corePoolSize, //核心线程数最大值
             maximumPoolSize,//线程总数最大值
             keepAliveTime,//非核心线程闲置超时时长
@@ -43,6 +43,21 @@ public class ThreadPool {
             threadFactory, //新建线程工厂
             rejectHandler //当提交任务数超过maxmumPoolSize+workQueue之和时，任务会交给RejectedExecutionHandler来处理
     );
+
+    public static void execute(Runnable command) {
+        while (true) {
+            if (ThreadPool.THREAD_POOL_EXECUTOR.getQueue().size() > 100) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                continue;
+            }
+            break;
+        }
+        THREAD_POOL_EXECUTOR.execute(command);
+    }
 
 
 }

@@ -5,6 +5,7 @@ import com.hbs.core.confs.CrawlerConfig
 import com.hbs.core.constants.HttpRequestType
 import com.hbs.core.enties.CrawlerParameters
 import com.hbs.core.enties.RespBody
+import com.hbs.core.utils.ThreadPool
 import okhttp3.*
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
@@ -20,6 +21,7 @@ import java.nio.charset.Charset
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
+import java.util.function.Supplier
 
 /**
  * Created by zun.wei on 2022/4/27.
@@ -310,7 +312,7 @@ class GroovyCrawler {
                 respBody.setContentLength(contentLength);
                 respBody.setBaseUri(scheme + "://" + host);
                 respBody.setRequestUrl(url);
-                this.crawlerConf.getRespBodys().add(respBody);
+                this.crawlerConf.getRespBodys().put(url, respBody);
 
             }
         } catch (IOException e) {
@@ -339,86 +341,36 @@ class GroovyCrawler {
         }
     }
 
-    /**
-     * 删除第一个请求响应体
-     */
-    GroovyCrawler removeFirstRespBody() {
-        this.crawlerConf.getRespBodys().remove(0);
-        return this;
-    }
 
     /**
-     * 删除最后一个请求响应体
+     * 删除一个请求响应体
      */
-    GroovyCrawler removeLastRespBody() {
-        this.crawlerConf.getRespBodys().remove(this.crawlerConf.getRespBodys().size() - 1);
-        return this;
-    }
-
-    /**
-     * 删除请求体
-     *
-     * @param requestIndex 请求顺序下标(从0开始)
-     */
-    GroovyCrawler removeRespBody(int requestIndex) {
-        this.crawlerConf.getRespBodys().remove(requestIndex);
-        return this;
-    }
-
-    /**
-     * 删除第一个 web document 文档缓存
-     */
-    GroovyCrawler removeFirstDocument() {
-        this.crawlerConf.getDocuments().remove(0);
-        return this;
-    }
-
-    /**
-     * 删除最后一个 web document 文档缓存
-     */
-    GroovyCrawler removeLastDocument() {
-        this.crawlerConf.getDocuments().remove(this.crawlerConf.getDocuments().size() - 1);
+    GroovyCrawler removeRespBody(String url) {
+        this.crawlerConf.getRespBodys().remove(url)
         return this;
     }
 
     /**
      * 删除一个 web document 文档缓存
-     *
-     * @param requestIndex 请求顺序下标(从0开始)
      */
-    GroovyCrawler removeDocument(int requestIndex) {
-        this.crawlerConf.getDocuments().remove(requestIndex);
+    GroovyCrawler removeDocument(String url) {
+        this.crawlerConf.getDocuments().remove(url)
         return this;
     }
 
-    /**
-     * 构建 web document (最早一次请求获取到的文档数据转换)
-     */
-    GroovyCrawler makeFirstWebDocument() {
-        return makeWebDocument(0);
-    }
-
-    /**
-     * 构建 web document (最近一次请求获取到的文档数据转换)
-     */
-    GroovyCrawler makeLastWebDocument() {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        int requestIndex = respBodys.size() - 1;
-        return makeWebDocument(requestIndex);
-    }
 
     /**
      * 构建 web document，指定请求的的顺序下标(从0开始)
      *
      * @param requestIndex 请求顺序下标(从0开始)
      */
-    GroovyCrawler makeWebDocument(int requestIndex) {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        RespBody respBody = respBodys.get(requestIndex);
+    GroovyCrawler makeWebDocument(String url) {
+        Map<String, RespBody> respBodys = this.crawlerConf.getRespBodys();
+        RespBody respBody = respBodys.get(url);
         String baseUri = respBody.getBaseUri();
-        String result = getResult(requestIndex);
+        String result = getResult(url);
         Document document = Jsoup.parse(result, baseUri);
-        this.crawlerConf.getDocuments().add(document);
+        this.crawlerConf.getDocuments().put(url, document);
         return this;
     }
 
@@ -427,75 +379,45 @@ class GroovyCrawler {
      * @param docIndex 文档下标
      * @param documentConsumer 文档消费函数
      */
-    GroovyCrawler document(int docIndex, Consumer<Document> documentConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        documentConsumer.accept(documents.get(docIndex));
+    GroovyCrawler document(String url, Consumer<Document> documentConsumer) {
+        Map<String, Document> documents = this.crawlerConf.getDocuments();
+        documentConsumer.accept(documents.get(url));
         return this;
     }
 
-    /**
-     * 获取web document文档,最后请求到的文档
-     * @param documentConsumer 文档消费函数
-     */
-    GroovyCrawler document(Consumer<Document> documentConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        int docIndex = documents.size() - 1;
-        return document(docIndex, documentConsumer);
-    }
 
     /**
      * 获取web document文档
      * @param docIndex 文档下标
      * @param documentCrawlerBiConsumer 文档消费函数
      */
-    GroovyCrawler document(int docIndex, BiConsumer<Document, GroovyCrawler> documentCrawlerBiConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        documentCrawlerBiConsumer.accept(documents.get(docIndex), this);
+    GroovyCrawler document(String url, BiConsumer<Document, GroovyCrawler> documentCrawlerBiConsumer) {
+        Map<String, Document> documents = this.crawlerConf.getDocuments();
+        documentCrawlerBiConsumer.accept(documents.get(url), this);
         return this;
-    }
-
-    /**
-     * 获取web document文档
-     * @param documentCrawlerBiConsumer 文档消费函数
-     */
-    GroovyCrawler document(BiConsumer<Document, GroovyCrawler> documentCrawlerBiConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        int docIndex = documents.size() - 1;
-        return document(docIndex, documentCrawlerBiConsumer);
     }
 
     /**
      * 对 web document 进行 css选择器选择
      *
-     * @param docIndex    web document 文档下标(从0开始)
-     * @param cssQuery    css 选择器
+     * @param docIndex web document 文档下标(从0开始)
+     * @param cssQuery css 选择器
      * @param eleConsumer elements 消费函数
      */
-    GroovyCrawler docSelect(int docIndex, String cssQuery, BiConsumer<Elements, GroovyCrawler> eleConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        Document document = documents.get(docIndex);
+    GroovyCrawler docSelect(String url, String cssQuery, BiConsumer<Elements, GroovyCrawler> eleConsumer) {
+        Map<String, Document> documents = this.crawlerConf.getDocuments();
+        Document document = documents.get(url);
         Elements elements = document.select(cssQuery);
         eleConsumer.accept(elements, this);
         return this;
     }
 
-    /**
-     * 对 web document 进行 css选择器选择 （选择最后一个文档）
-     *
-     * @param cssQuery    css 选择器
-     * @param eleConsumer elements 消费函数
-     */
-    GroovyCrawler docSelect(String cssQuery, BiConsumer<Elements, GroovyCrawler> eleConsumer) {
-        List<Document> documents = this.crawlerConf.getDocuments();
-        int docIndex = documents.size() - 1;
-        return docSelect(docIndex, cssQuery, eleConsumer);
-    }
 
     /**
      * 对 web document 的 elements 进行选择
      *
-     * @param elements    web document 的 elements
-     * @param cssQuery    css 选择器
+     * @param elements web document 的 elements
+     * @param cssQuery css 选择器
      * @param eleConsumer 新的elements 消费函数
      */
     GroovyCrawler eleSelect(Elements elements, String cssQuery, BiConsumer<Elements, GroovyCrawler> eleConsumer) {
@@ -547,7 +469,7 @@ class GroovyCrawler {
     /**
      * 获取 web document 的 elements attr 属性值
      *
-     * @param elements     web document 的 elements
+     * @param elements web document 的 elements
      * @param attributeKey 属性名称
      * @param attrConsumer 属性值消费函数
      */
@@ -585,32 +507,13 @@ class GroovyCrawler {
     }
 
     /**
-     * 获取响应体值（字符串），（最后一次请求结果的响应体）
-     */
-    String getResult() {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        int requestIndex = respBodys.size() - 1;
-        return getResult(requestIndex);
-    }
-
-    /**
-     * 获取响应体值（字符串），（最后一次请求结果的响应体）
-     * 并且释放最后一次响应体的缓存
-     */
-    String getResultAndReleaseRespBody() {
-        String result = getResult();
-        this.removeLastRespBody();
-        return result;
-    }
-
-    /**
      * 获取响应体值（字符串）
      *
      * @param requestIndex 请求顺序下标(从0开始)
      */
-    String getResult(int requestIndex) {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        RespBody respBody = respBodys.get(requestIndex);
+    String getResult(String url) {
+        Map<String, RespBody> respBodys = this.crawlerConf.getRespBodys();
+        RespBody respBody = respBodys.get(url);
         byte[] bodyDatas = respBody.getBodyDatas();
         Charset charset = respBody.getCharset();
         return new String(bodyDatas, charset);
@@ -622,29 +525,10 @@ class GroovyCrawler {
      *
      * @param requestIndex 请求顺序下标(从0开始)
      */
-    String getResultAndReleaseRespBody(int requestIndex) {
-        String result = getResult(requestIndex);
-        this.removeRespBody(requestIndex);
+    String getResultAndReleaseRespBody(String url) {
+        String result = getResult(url);
+        this.removeRespBody(url);
         return result;
-    }
-
-    /**
-     * 获取响应体值 字节数组
-     */
-    byte[] getBytesResult() {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        int requestIndex = respBodys.size() - 1;
-        return getBytesResult(requestIndex);
-    }
-
-    /**
-     * 获取响应体值 字节数组
-     * 并且释放响应体的缓存
-     */
-    byte[] getBytesResultAndReleaseRespBody() {
-        byte[] bytesResult = getBytesResult();
-        this.removeLastRespBody();
-        return bytesResult;
     }
 
     /**
@@ -652,9 +536,9 @@ class GroovyCrawler {
      *
      * @param requestIndex 请求顺序下标(从0开始)
      */
-    byte[] getBytesResult(int requestIndex) {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        RespBody respBody = respBodys.get(requestIndex);
+    byte[] getBytesResult(String url) {
+        Map<String, RespBody> respBodys = this.crawlerConf.getRespBodys();
+        RespBody respBody = respBodys.get(url);
         return respBody.getBodyDatas();
     }
 
@@ -664,46 +548,22 @@ class GroovyCrawler {
      *
      * @param requestIndex 请求顺序下标(从0开始)
      */
-    byte[] getBytesResultAndReleaseRespBody(int requestIndex) {
-        byte[] bytesResult = getBytesResult(requestIndex);
-        this.removeRespBody(requestIndex);
+    byte[] getBytesResultAndReleaseRespBody(String url) {
+        byte[] bytesResult = getBytesResult(url);
+        this.removeRespBody(url);
         return bytesResult;
     }
 
-    /**
-     * 获取响应体值（泛型对象），通过 JSON.parseObject(result, clazz)
-     *
-     * @param clazz 指定类型的 class
-     * @param <T>   泛型
-     */
-    def <T> T getResult(Class<T> clazz) {
-        List<RespBody> respBodys = this.crawlerConf.getRespBodys();
-        int requestIndex = respBodys.size() - 1;
-        return getResult(requestIndex, clazz);
-    }
-
-    /**
-     * 获取响应体值（泛型对象），通过 JSON.parseObject(result, clazz)
-     * 并且释放响应体的缓存
-     *
-     * @param clazz 指定类型的 class
-     * @param <T>   泛型
-     */
-    def <T> T getResultAndReleaseRespBody(Class<T> clazz) {
-        T result = getResult(clazz);
-        this.removeLastRespBody();
-        return result;
-    }
 
     /**
      * 获取响应体值（泛型对象），通过 JSON.parseObject(result, clazz)
      *
      * @param requestIndex 请求顺序下标(从0开始)
-     * @param clazz        指定类型的 class
-     * @param <T>          泛型
+     * @param clazz 指定类型的 class
+     * @param <T >            泛型
      */
-    def <T> T getResult(int requestIndex, Class<T> clazz) {
-        String result = getResult(requestIndex);
+    def <T> T getResult(String url, Class<T> clazz) {
+        String result = getResult(url);
         return JSON.parseObject(result, clazz);
     }
 
@@ -712,12 +572,12 @@ class GroovyCrawler {
      * 并且释放响应体的缓存
      *
      * @param requestIndex 请求顺序下标(从0开始)
-     * @param clazz        指定类型的 class
-     * @param <T>          泛型
+     * @param clazz 指定类型的 class
+     * @param <T >            泛型
      */
-    def <T> T getResultAndReleaseRespBody(int requestIndex, Class<T> clazz) {
-        T result = getResult(requestIndex, clazz);
-        this.removeRespBody(requestIndex);
+    def <T> T getResultAndReleaseRespBody(String url, Class<T> clazz) {
+        T result = getResult(url, clazz);
+        this.removeRespBody(url);
         return result;
     }
 
@@ -731,7 +591,7 @@ class GroovyCrawler {
     }
 
     /**
-     * 根据下一页地址循环爬取 (单爬虫复用)
+     * 根据下一页地址循环爬取
      * @param crawler 爬虫
      * @param crawlLogic 爬虫逻辑
      */
@@ -744,18 +604,5 @@ class GroovyCrawler {
         } while (crawler.hasNextPage())
     }
 
-    /**
-     * 根据下一页地址循环爬取 （多爬虫）
-     * @param crawler 爬虫初始爬虫
-     * @param crawlLogic 爬虫逻辑，返回值为新爬虫
-     */
-    static void loopCrawl(GroovyCrawler crawler, BiFunction<GroovyCrawler, String, GroovyCrawler> crawlLogic) {
-        do {
-            String nextPage = crawler.getNextPage();
-            if (StringUtils.isNotBlank(nextPage)) {
-                crawler = crawlLogic.apply(crawler, nextPage)
-            }
-        } while (Objects.nonNull(crawler) && crawler.hasNextPage())
-    }
 
 }

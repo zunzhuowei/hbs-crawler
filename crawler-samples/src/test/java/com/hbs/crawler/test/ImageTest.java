@@ -24,8 +24,8 @@ public class ImageTest {
     static BiConsumer<GroovyCrawler, String> crawlLogic() {
         return (crawler, nextPageUrl) -> {
             crawler.doGet(nextPageUrl)
-                    .makeLastWebDocument()
-                    .document((elements, crawler1) -> {
+                    .makeWebDocument(nextPageUrl)
+                    .document(nextPageUrl,(elements, crawler1) -> {
                         System.out.println("elements = " + elements);
                     });
 
@@ -41,7 +41,7 @@ public class ImageTest {
                     //    final String string = document.toString();
                     //    System.out.println("string = " + string);
                     //})
-                    .getBytesResultAndReleaseRespBody();
+                    .getBytesResultAndReleaseRespBody(nextPageUrl);
 
             if (respBody.length > 500) {
                 try {

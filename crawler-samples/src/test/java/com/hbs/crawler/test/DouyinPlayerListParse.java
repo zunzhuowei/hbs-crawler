@@ -1,6 +1,5 @@
 package com.hbs.crawler.test;
 
-import com.hbs.core.crawlers.Crawler;
 import com.hbs.core.crawlers.GroovyCrawler;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -54,7 +53,7 @@ public class DouyinPlayerListParse {
     static BiConsumer<GroovyCrawler, String> crawlLogic(String imgPath) {
         return (crawler, nextPageUrl) -> {
             byte[] respBody = crawler.doGet(nextPageUrl, new HashMap<>())
-                    .getBytesResultAndReleaseRespBody();
+                    .getBytesResultAndReleaseRespBody(nextPageUrl);
             try {
                 FileUtils.writeByteArrayToFile(new File(imgPath + ".jpeg"), respBody);
             } catch (IOException e) {

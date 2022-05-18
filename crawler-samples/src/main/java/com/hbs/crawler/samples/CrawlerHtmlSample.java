@@ -18,8 +18,8 @@ public class CrawlerHtmlSample {
     static BiConsumer<GroovyCrawler, String> crawlLogic() {
         return (newCrawler, nextPageUrl) -> {
             newCrawler.doGet(nextPageUrl)
-                    .makeLastWebDocument()
-                    .docSelect("#page-container > div.content > div.row.vod-type-list > a.item-video-container",
+                    .makeWebDocument(nextPageUrl)
+                    .docSelect(nextPageUrl,"#page-container > div.content > div.row.vod-type-list > a.item-video-container",
                             ((elements, crawler) -> {
                                 for (Element element : elements) {
                                     String url = element.attr("abs:href");
@@ -32,20 +32,20 @@ public class CrawlerHtmlSample {
                                     String m3u8Selector = "#page-container > div.content > div:nth-child(12) > div > " +
                                             "div.video-info.pc-video-info.col-md-5.col-xs-12.m-b-10 > div.addr.m-hide > div:nth-child(1) > div.text > input";
                                     crawler.doGet(url)
-                                            .makeLastWebDocument()
-                                            .docSelect(m3u8Selector, (eles, c1) -> {
+                                            .makeWebDocument(url)
+                                            .docSelect(url, m3u8Selector, (eles, c1) -> {
                                                 String index_m3u8 = eles.attr("value");
                                                 System.out.println("index_m3u8 = " + index_m3u8);
 
                                             })
-                                            .removeLastDocument()
-                                            .removeLastRespBody();
+                                            .removeDocument(url)
+                                            .removeRespBody(url);
 
                                 }
 
                                 // 下一页选择
                                 String nextPageSelector = "#page-container > div.content > div.kscont > div > ol > li > span > a.next";
-                                crawler.docSelect(nextPageSelector, ((elements1, crawler1) -> {
+                                crawler.docSelect(nextPageUrl, nextPageSelector, ((elements1, crawler1) -> {
                                     //获取下一页链接
                                     crawler1.eleAttr(elements1, "abs:href", (attr, crawler2) -> {
                                         //crawler2.doGet(attr);
@@ -55,8 +55,8 @@ public class CrawlerHtmlSample {
                                 }));
 
                             }))
-                    .removeLastDocument()
-                    .removeLastRespBody();
+                    .removeDocument(nextPageUrl)
+                    .removeDocument(nextPageUrl);
         };
     }
 

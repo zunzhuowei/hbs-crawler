@@ -41,7 +41,7 @@ public class CrawlerImagesSample {
                     //    final String string = document.toString();
                     //    System.out.println("string = " + string);
                     //})
-                    .getBytesResultAndReleaseRespBody();
+                    .getBytesResultAndReleaseRespBody(nextPageUrl);
 
             if (respBody.length > 500) {
                 try {
