@@ -19,7 +19,7 @@ public class CrawlerImagesSample2 {
 
 
     public static void main(String[] args) {
-        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/998638/pexels-photo-998638.jpeg?fm=jpg");
+        GroovyCrawler crawler = GroovyCrawler.newCrawler("https://images.pexels.com/photos/1029896/pexels-photo-1029896.jpeg?fm=jpg");
         GroovyCrawler.loopCrawl(crawler, crawlLogic());
     }
 
